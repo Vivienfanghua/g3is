@@ -84,6 +84,15 @@ app.get('/get_barrier_info',function (req, res) {
     res.send(allBarriers[dataId][queryTime]);
 });
 
+/**
+ * @example http://127.0.0.1:3000/get_all_infos
+ * @return JSON array.
+ */
+app.get('/get_all_infos',function (req, res) {
+    console.log('get_all_infos');
+    res.send(data);
+});
+
 app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
 });
