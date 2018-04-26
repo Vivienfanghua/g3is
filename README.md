@@ -8,7 +8,6 @@ g3is project.
   * @param req.query.time int
   * @example http://127.0.0.1:3000/get_current_data?time=55
   * @return JSON array.
-  */
 
 3.返回指定目标的信息
    * @param req.query.dataid int
