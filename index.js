@@ -1,11 +1,18 @@
 const express = require('express');
+const _ = require('lodash');
 const app = express();
+const bodyParser = require('body-parser');
 
 const MongoClient = require('mongodb').MongoClient;
 const url = "mongodb://localhost:27017/";
 
 let mongodb;
 let data,timeIndexData,allConflictCodes,allBarriers;
+
+function pagination(pageNo, pageSize, array) {
+    let offset = (pageNo - 1) * pageSize;
+    return (offset + pageSize >= array.length) ? array.slice(offset, array.length) : array.slice(offset, offset + pageSize);
+}
 
 MongoClient.connect(url, function(err, db) {
     if (err) throw err;
@@ -17,6 +24,8 @@ MongoClient.connect(url, function(err, db) {
         if (err) throw err;
 
         data = result;
+        let array = pagination(0,20,data);
+        let pageNum = 20;
         data.forEach((item, i) => {
             // console.log(item);
             if(item['data_exist']){
@@ -41,8 +50,11 @@ MongoClient.connect(url, function(err, db) {
                 }
             }
         });
+
     });
 });
+
+
 
 /**
  * @description test.
@@ -50,6 +62,13 @@ MongoClient.connect(url, function(err, db) {
 app.get('/', function (req, res) {
     res.send('holy g3is!');
 });
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
+
 
 /**
  * @example http://127.0.0.1:3000/get_all_conflict_codes
@@ -77,7 +96,7 @@ app.get('/get_current_data',function (req, res) {
  * @return JSON array.
  */
 app.post('/get_current_data',function (req, res) {
-    let queryTime = req.query.time;
+    let queryTime = req.body.time;
     console.log('get_current_data',queryTime);
     res.send({result:timeIndexData[queryTime]});
 });
@@ -102,20 +121,42 @@ app.get('/get_barrier_info',function (req, res) {
  * @return JSON object.
  */
 app.post('/get_barrier_info',function (req, res) {
-    let dataId = req.query.dataid;
-    let queryTime = req.query.time;
+    //let params = _.pick(JSON.parse(decodeURIComponent(req.body.data)), 'dataid', 'time');
+    let dataId = req.body.dataid;
+    let queryTime = req.body.time;
     console.log('get_barrier_info',dataId, queryTime);
     res.send(allBarriers[dataId][queryTime]);
 });
 
 /**
+ * @param req.query.pageNum int
+ * @param req.query.pageSize int
  * @example http://127.0.0.1:3000/get_all_infos
  * @return JSON array.
  */
 app.get('/get_all_infos',function (req, res) {
     console.log('get_all_infos');
-    res.send({result:data});
+    let pageNum = parseInt(req.query.pageNum);
+    let pageSize = parseInt(req.query.pageSize);
+    let partition = pagination(pageNum,pageSize,data);
+    res.send({result:partition});
 });
+
+
+/**
+ * @param req.query.pageNum int
+ * @param req.query.pageSize int
+ * @example http://127.0.0.1:3000/get_all_infos
+ * @return JSON array.
+ */
+app.post('/get_all_infos',function (req, res) {
+    console.log('get_all_infos');
+    let pageNum = parseInt(req.body.pageNum);
+    let pageSize = parseInt(req.body.pageSize);
+    let partition = pagination(pageNum,pageSize,data);
+    res.send({result:partition});
+});
+
 
 app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
