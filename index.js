@@ -57,7 +57,7 @@ app.get('/', function (req, res) {
  */
 app.get('/get_all_conflict_codes',function (req, res) {
     console.log('get_all_conflict_codes');
-    res.send(allConflictCodes);
+    res.send({result:allConflictCodes});
 });
 
 /**
@@ -68,7 +68,18 @@ app.get('/get_all_conflict_codes',function (req, res) {
 app.get('/get_current_data',function (req, res) {
     let queryTime = req.query.time;
     console.log('get_current_data',queryTime);
-    res.send(timeIndexData[queryTime]);
+    res.send({result:timeIndexData[queryTime]});
+});
+
+/**
+ * @param req.body.time int
+ * @example http://127.0.0.1:3000/get_current_data?time=55
+ * @return JSON array.
+ */
+app.post('/get_current_data',function (req, res) {
+    let queryTime = req.query.time;
+    console.log('get_current_data',queryTime);
+    res.send({result:timeIndexData[queryTime]});
 });
 
 /**
@@ -85,12 +96,25 @@ app.get('/get_barrier_info',function (req, res) {
 });
 
 /**
+ * @param req.body.dataid int
+ * @param req.query.time int
+ * @example http://127.0.0.1:3000/get_barrier_info
+ * @return JSON object.
+ */
+app.post('/get_barrier_info',function (req, res) {
+    let dataId = req.query.dataid;
+    let queryTime = req.query.time;
+    console.log('get_barrier_info',dataId, queryTime);
+    res.send(allBarriers[dataId][queryTime]);
+});
+
+/**
  * @example http://127.0.0.1:3000/get_all_infos
  * @return JSON array.
  */
 app.get('/get_all_infos',function (req, res) {
     console.log('get_all_infos');
-    res.send(data);
+    res.send({result:data});
 });
 
 app.listen(3000, function () {
