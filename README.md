@@ -18,7 +18,7 @@
    * @example http://127.0.0.1:3000/get_barrier_info?dataid=8&time=6197
    * @return JSON object.
 
-###  4.返回所有动态信息(分页)(get/post)
+###  4.返回所有动态信息(分页)(get/post)``
    * @pageNum int
    * @pageSize int
    * @example http://127.0.0.1:3000/get_all_infos

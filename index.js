@@ -142,6 +142,11 @@ app.get('/get_all_infos',function (req, res) {
     res.send({result:partition});
 });
 
+app.get('/get_all_all',function (req, res) {
+    console.log('get_all_all');
+    res.send({result:data});
+});
+
 
 /**
  * @param req.query.pageNum int
@@ -154,7 +159,15 @@ app.post('/get_all_infos',function (req, res) {
     let pageNum = parseInt(req.body.pageNum);
     let pageSize = parseInt(req.body.pageSize);
     let partition = pagination(pageNum,pageSize,data);
+    console.log(partition.length);
     res.send({result:partition});
+});
+
+app.post('/get_first_page',function (req, res) {
+    console.log('get_all_infos');
+    let pageSize = parseInt(req.body.pageSize);
+    // console.log(partition);
+    res.send({result:data.slice(0,pageSize)});
 });
 
 
