@@ -7,6 +7,11 @@ const MongoClient = require('mongodb').MongoClient;
 const url = "mongodb://localhost:27017/";
 
 let mongodb;
+let dataQuyu,dataTrack8,dataTrack12;
+let dataShip, dataPlane, dataDD;
+let timeIndexDataTrack12;
+let allConflictCodes8, allConflictCodes12;
+let allConflictCodes8Time, allConflictCodes12Time;
 let data,timeIndexData,allConflictCodes,allBarriers;
 
 function pagination(pageNo, pageSize, array) {
@@ -20,12 +25,15 @@ MongoClient.connect(url, function(err, db) {
     timeIndexData = {};
     allBarriers = {};
     allConflictCodes = [];
-    mongodb.collection("test2"). find({}).toArray(function(err, result) {
+    timeIndexDataTrack12 = {};
+    allConflictCodes8 = [];
+    allConflictCodes12 = [];
+    allConflictCodes8Time = {};
+    allConflictCodes12Time = {};
+    mongodb.collection("test2").find({}).toArray(function(err, result) {
         if (err) throw err;
 
         data = result;
-        let array = pagination(0,20,data);
-        let pageNum = 20;
         data.forEach((item, i) => {
             // console.log(item);
             if(item['data_exist']){
@@ -33,17 +41,12 @@ MongoClient.connect(url, function(err, db) {
                 let conflict = false;
                 time_data_items.forEach((time_item, t_i) =>{
                     let time = time_item['time'];
-                    let barrierId = time_item['dataid'];
                     if(time_item['conflict'])
                         conflict = true;
                     if(!timeIndexData[time]){
                         timeIndexData[time] = [];
                     }
                     timeIndexData[time].push(time_item);
-                    if(!allBarriers[barrierId]){
-                        allBarriers[barrierId] = {};
-                    }
-                    allBarriers[barrierId][time] = time_item;
                 });
                 if(conflict){
                     allConflictCodes.push(item['_id']);
@@ -51,6 +54,97 @@ MongoClient.connect(url, function(err, db) {
             }
         });
 
+    });
+    mongodb.collection("quyu").find({}).toArray(function (err, result) {
+        dataQuyu = result;
+    });
+    mongodb.collection("track_layer8").find({}).toArray(function (err,result) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        dataTrack8 = result;
+
+        dataTrack8.forEach((item, i) => {
+            // console.log(item);
+            if(item['data_exist']){
+                let time_data_items = item['data'];
+                let conflict = false;
+                time_data_items.forEach((time_item, t_i) =>{
+                    if(time_item['conflict'])
+                        conflict = true;
+                });
+                if(conflict){
+                    allConflictCodes8.push(item['_id']);
+                }
+            }
+        });
+        console.log(allConflictCodes8.length);
+    });
+    mongodb.collection("track_layer12").find({}).toArray(function (err,result) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        dataTrack12 = result;
+
+        dataTrack12.forEach((item, i) => {
+            // console.log(item);
+            if(item['data_exist']){
+                let time_data_items = item['data'];
+                let conflict = false;
+                time_data_items.forEach((time_item, t_i) =>{
+                    let time = Math.floor(time_item['time']);
+                    let barrierId = time_item['ID'];
+                    if(time_item['conflict'])
+                        conflict = true;
+                    if(!timeIndexDataTrack12[time]){
+                        timeIndexDataTrack12[time] = [];
+                    }
+                    timeIndexDataTrack12[time].push(time_item);
+                    if(!allBarriers[barrierId]){
+                        allBarriers[barrierId] = {};
+                    }
+                    allBarriers[barrierId][time] = time_item;
+                });
+                if(conflict){
+                    allConflictCodes12.push(item['_id']);
+                }
+            }
+        });
+        // console.log(allBarriers['PLANE2']);
+        // console.log(timeIndexDataTrack12[85].length);
+        // console.log(allConflictCodes12.length);
+    });
+    mongodb.collection("para_ship").find({}).toArray(function (err, result) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        dataShip = {};
+        result.forEach((item, t_i) =>{
+            dataShip[item['ID']] = item;
+        });
+    });
+    mongodb.collection("para_plane").find({}).toArray(function (err, result) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        dataPlane = {};
+        result.forEach((item, t_i) =>{
+            dataPlane[item['ID']] = item;
+        });
+    });
+    mongodb.collection("para_DD").find({}).toArray(function (err, result) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        dataDD = {};
+        result.forEach((item, t_i) =>{
+            dataDD[item['ID']] = item;
+        });
     });
 });
 
@@ -159,7 +253,6 @@ app.post('/get_all_infos',function (req, res) {
     let pageNum = parseInt(req.body.pageNum);
     let pageSize = parseInt(req.body.pageSize);
     let partition = pagination(pageNum,pageSize,data);
-    console.log(partition.length);
     res.send({result:partition});
 });
 
@@ -168,6 +261,102 @@ app.post('/get_first_page',function (req, res) {
     let pageSize = parseInt(req.body.pageSize);
     // console.log(partition);
     res.send({result:data.slice(0,pageSize)});
+});
+
+/**
+ * @description API 1
+ */
+app.post('/get_quyu',function(req,res){
+    console.log('get_quyu');
+    let pageNum = parseInt(req.body.pageNum);
+    let pageSize = parseInt(req.body.pageSize);
+    let partition = pagination(pageNum,pageSize,dataQuyu);
+    res.send({result:partition});
+});
+
+/**
+ * @description API 2
+ */
+app.post('/get_all_track_8',function(req,res){
+    console.log('get_quyu');
+    let pageNum = parseInt(req.body.pageNum);
+    let pageSize = parseInt(req.body.pageSize);
+    let partition = pagination(pageNum,pageSize,dataTrack8);
+    res.send({result:partition});
+});
+
+/**
+ * @description API 3
+ */
+app.post('/get_object_info',function (req, res) {
+    console.log('get_object_info');
+    let type = req.body.type;
+    let id = req.body.ID;
+    // ship
+    if(type === '1'){
+        res.send({result:dataShip[id]});
+    }
+    // plane
+    else if(type === '2'){
+        res.send({result:dataPlane[id]});
+    }
+    // DD
+    else if(type === '3'){
+        res.send({result:dataDD[id]});
+    }
+});
+
+/**
+ * @description API 4
+ */
+app.post('/get_track_point_time',function(req,res){
+    console.log('get_track_point_time');
+    let time = parseInt(req.body.time);
+    let pageNum = parseInt(req.body.pageNum);
+    let pageSize = parseInt(req.body.pageSize);
+    let timeData = timeIndexDataTrack12[time];
+    let partition = pagination(pageNum,pageSize,timeData);
+    res.send({result:partition});
+});
+
+/**
+ * @description API 5
+ */
+app.post('/get_track_point_time_id',function(req,res){
+    console.log('get_track_point_time_id');
+    let time = parseInt(req.body.time);
+    let id = req.body.id;
+    let track = allBarriers[id][time];
+    res.send({result:track});
+});
+
+/**
+ * @description API 6
+ */
+app.post('/get_conflict_codes',function(req,res){
+    console.log('get_conflict_codes');
+    let level = parseInt(req.body.level);
+    if(level === 8){
+        res.send({result:allConflictCodes8});
+    }
+    else if(level === 12){
+        res.send({result:allConflictCodes12});
+    }
+});
+
+/**
+ * @description API 7
+ */
+app.post('/get_conflict_codes_time',function(req,res){
+    console.log('get_conflict_codes_time');
+    let level = parseInt(req.body.level);
+    let time = parseInt(req.body.time);
+    if(level === 8){
+        // TODO code
+    }
+    else if(level === 12){
+        res.send({result:allConflictCodes12});
+    }
 });
 
 
