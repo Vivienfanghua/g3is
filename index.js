@@ -12,6 +12,7 @@ let dataShip, dataPlane, dataDD;
 let timeIndexDataTrack12;
 let allConflictCodes8, allConflictCodes12;
 let allConflictCodes8Time, allConflictCodes12Time;
+let timeConflictCodes8,timeConflictCodes12;
 let data,timeIndexData,allConflictCodes,allBarriers;
 
 function pagination(pageNo, pageSize, array) {
@@ -30,6 +31,8 @@ MongoClient.connect(url, function(err, db) {
     allConflictCodes12 = [];
     allConflictCodes8Time = {};
     allConflictCodes12Time = {};
+    timeConflictCodes8 = {};
+    timeConflictCodes12 = {};
     mongodb.collection("test2").find({}).toArray(function(err, result) {
         if (err) throw err;
 
@@ -72,9 +75,16 @@ MongoClient.connect(url, function(err, db) {
                 let code = item['_id'];
                 let conflict = false;
                 time_data_items.forEach((time_item, t_i) =>{
+                    let currentTime = Math.floor(time_item['time']);
                     time_item['code'] = code;
-                    if(time_item['conflict'])
+
+                    if(time_item['conflict']){
+                        if(!timeConflictCodes8[currentTime])
+                            timeConflictCodes8[currentTime] = [];
+                        timeConflictCodes8[currentTime].push(code);
                         conflict = true;
+                    }
+
                 });
                 if(conflict){
                     allConflictCodes8.push(item['_id']);
@@ -100,8 +110,12 @@ MongoClient.connect(url, function(err, db) {
                     time_item['code'] = code;
                     let time = Math.floor(time_item['time']);
                     let barrierId = time_item['ID'];
-                    if(time_item['conflict'])
+                    if(time_item['conflict']){
+                        if(!timeConflictCodes12[time])
+                            timeConflictCodes12[time] = [];
+                        timeConflictCodes12[time].push(code);
                         conflict = true;
+                    }
                     if(!timeIndexDataTrack12[time]){
                         timeIndexDataTrack12[time] = [];
                     }
@@ -361,10 +375,10 @@ app.post('/get_conflict_codes_time',function(req,res){
     let level = parseInt(req.body.level);
     let time = parseInt(req.body.time);
     if(level === 8){
-        // TODO code
+        res.send({result:timeConflictCodes8[time]});
     }
     else if(level === 12){
-        res.send({result:allConflictCodes12});
+        res.send({result:timeConflictCodes12[time]});
     }
 });
 
