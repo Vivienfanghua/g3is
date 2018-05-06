@@ -290,6 +290,11 @@ app.post('/get_quyu',function(req,res){
     res.send({result:partition});
 });
 
+app.post('/get_all_quyu',function(req,res){
+    console.log('get_all_quyu');
+    res.send({result:dataQuyu});
+});
+
 /**
  * @description API 2
  */
@@ -297,7 +302,11 @@ app.post('/get_all_track_8',function(req,res){
     console.log('get_all_track_8');
     let pageNum = parseInt(req.body.pageNum);
     let pageSize = parseInt(req.body.pageSize);
+    console.log('req.body.pageNum:'+req.body.pageNum);
+    console.log('req.body.pageSize:'+req.body.pageSize);
     let partition = pagination(pageNum,pageSize,dataTrack8);
+    console.log("partition.length:"+partition.length);
+
     res.send({result:partition});
 });
 
@@ -336,6 +345,10 @@ app.post('/get_track_point_time',function(req,res){
     let pageNum = parseInt(req.body.pageNum);
     let pageSize = parseInt(req.body.pageSize);
     let timeData = timeIndexDataTrack12[time];
+
+    console.log('time:'+req.body.time);
+    console.log('pageNum:'+req.body.pageNum);
+    console.log('pageSize:'+req.body.pageSize);
     let partition = pagination(pageNum,pageSize,timeData);
     res.send({result:partition});
 });
