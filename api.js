@@ -173,10 +173,20 @@ app.post('/get_conflict_codes', function (req, res) {
     console.log('get_conflict_codes');
     let level = parseInt(req.body.level);
     if (level === 8) {
+        if (allConflictCodes8.length<1)
+        {
+            mongodb.collection("track_layer_8").find({'data.conflict':1},{'data._id':1}).toArray(result);
+            allConflictCodes8 = result;
+        }
         console.log(allConflictCodes8.length);
         res.send({result: allConflictCodes8});
     }
     else if (level === 12) {
+        if(allConflictCodes12.length<1)
+        {
+            mongodb.collection("track_layer_12").find({'data.conflict':1},{'data._id':1}).toArray(result);
+            allConflictCodes12 = result;
+        }
         console.log(allConflictCodes12.length);
         res.send({result: allConflictCodes12});
     }
