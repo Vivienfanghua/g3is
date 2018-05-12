@@ -186,6 +186,7 @@ app.post('/get_object_info', function (req, res) {
 /**
  * @description API 5
  * 返回当前时刻的编码
+ * TODO refine database query.
  */
 app.post('/get_track_point_time', function (req, res) {
     try {
@@ -194,32 +195,30 @@ app.post('/get_track_point_time', function (req, res) {
         let pageSize = parseInt(req.body.pageSize);
         let level = parseInt(req.body.level);
         let time = parseInt(req.body.time);
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
+            collectionName = "track_layer10_view";
         logger.info('get_track_point_time', 'pageNum', pageNum, 'pageSize', pageSize, 'level', level, 'time', time);
-        mongodb.collection(collectionName).aggregate([{$match: {"data.time": time}}, {
-            $project: {
+
+        mongodb.collection(collectionName).find({"data.time": time}, {
+            fields: {
                 "_id": 1,
-                "data": {
-                    "$filter": {
-                        input: "$data",
-                        as: "v",
-                        cond: {$eq: ["$$v.time", time]},
-                    }
-                }
+                "data.time": 1,
+                "data.trackid": 1,
+                "data.L": 1,
+                "data.B": 1,
+                "data.H": 1,
+                "data.ID": 1,
+                "data.type": 1,
+                "data.yj": 1,
+                "data.hx": 1
             }
-        }, {$unwind: "$data"}
-        ]).limit(pageSize).skip(pageSize * pageNum - pageSize).toArray(function (err, result) {
-            if (err) {
-                logger.error(err);
-            }
+        }).limit(pageSize).skip(pageSize * pageNum - pageSize).toArray(function (err, result) {
             res.send({'result': result});
             logger.warn('get_track_point_time', 'result length', result.length);
         });
-
     }
     catch (e) {
         logger.error(e);
@@ -233,21 +232,18 @@ app.post('/get_track_codes_time', function (req, res) {
     try {
         let level = parseInt(req.body.level);
         let time = parseInt(req.body.time);
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
+            collectionName = "track_layer10_view";
         logger.info('get_track_codes_time', 'level', level, 'time', time);
 
-        mongodb.collection(collectionName).aggregate([{$match: {"data.time": time}}, {
-            $project: {
-                "_id": 1
-            }
-        }]).toArray(function (err, result) {
-            res.send({'result': result});
+        mongodb.collection(collectionName).distinct("_id", {"data.time": time}, function (err, results) {
+            res.send({'result': results});
             logger.warn('get_track_codes_time', 'result length', result.length);
         });
+
     }
     catch (e) {
         logger.error(e);
@@ -260,27 +256,18 @@ app.post('/get_track_codes_time', function (req, res) {
 app.post('/get_track_point_time_id', function (req, res) {
     try {
         let time = parseInt(req.body.time);
-        let id = req.body.id; // track id
+        let id = req.body.id;
         let level = parseInt(req.body.level);
         logger.info('get_track_point_time_id', 'level', level, 'time', time, 'id', id);
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
-        mongodb.collection(collectionName).aggregate([{$match: {"data.time": time, "data.trackid": id}}, {
-            $project: {
-                "_id": 1,
-                "data": {
-                    "$filter": {
-                        input: "$data",
-                        as: "v",
-                        cond: {$eq: ["$$v.time", time]},
-                    }
-                }
-            }
-        }, {$unwind: "$data"}
-        ]).toArray(function (err, result) {
+            collectionName = "track_layer10_view";
+        mongodb.collection(collectionName).find({
+            "data.time": time,
+            "data.trackid": id
+        }).toArray(function (err, result) {
             res.send({'result': result});
             logger.warn('get_track_point_time_id', 'result length', result.length);
         });
@@ -297,17 +284,13 @@ app.post('/get_track_point_time_id', function (req, res) {
 app.post('/get_conflict_codes', function (req, res) {
     try {
         let level = parseInt(req.body.level);
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
+            collectionName = "track_layer10_view";
         logger.info('get_conflict_codes', 'level', level);
-        mongodb.collection(collectionName).aggregate([{$match: {"data.conflict": 1}}, {
-            $project: {
-                "_id": 1
-            }
-        }]).toArray(function (err, results) {
+        mongodb.collection(collectionName).distinct("_id", {"data.conflict": 1}, function (err, results) {
             res.send({'result': results});
             logger.warn('get_conflict_codes', 'level', level);
         });
@@ -327,23 +310,19 @@ app.post('/get_conflict_codes_time', function (req, res) {
     try {
         let level = parseInt(req.body.level);
         let time = parseInt(req.body.time);
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
+            collectionName = "track_layer10_view";
         logger.info('get_conflict_codes_time', 'level', level, 'time', time);
-        mongodb.collection(collectionName).aggregate([{
-            $match: {
-                    "data.conflict": 1,
-                    "data.time": time
-            }}, {
-            $project: {
-                "_id": 1
-            }
-        }]).toArray(function (err, results) {
+        mongodb.collection(collectionName).distinct("_id", {
+            "data.conflict": 1,
+            "data.time": time
+        }, function (err, results) {
+
             res.send({'result': results});
-            logger.warn('get_conflict_codes_time', 'level', level);
+            logger.warn('get_conflict_codes_time', 'result length', results.length);
         });
     }
     catch (e) {
@@ -361,21 +340,13 @@ app.post('/get_track_one_position', function (req, res) {
         let level = parseInt(req.body.level);
         let trackid = req.body.trackid;
 
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
+            collectionName = "track_layer10_view";
 
         logger.info('get_track_one_position', 'level', level, 'trackid', trackid);
-
-        // mongodb.collection(collectionName).aggregate([{
-        //     $match: {
-        //         "data.trackid": trackid,
-        //     }}]).toArray(function (err, results) {
-        //     res.send({'result': results});
-        //     logger.warn('get_track_one_position', 'level', level);
-        // });
 
         mongodb.collection(collectionName).findOne({"data.trackid": trackid}, function (err, result) {
             res.send({'result': result});
@@ -397,13 +368,13 @@ app.post('/get_codes', function (req, res) {
     try {
         let level = parseInt(req.body.level);
 
-        let collectionName = "track_layer_8";
+        let collectionName = "track_layer8_view";
         if (level === 8)
-            collectionName = "track_layer_8";
+            collectionName = "track_layer8_view";
         if (level === 12)
-            collectionName = "track_layer_12";
+            collectionName = "track_layer12_view";
         if (level === 10)
-            collectionName = "track_layer_10";
+            collectionName = "track_layer10_view";
 
         logger.info('get_codes', 'level', level);
 
@@ -423,7 +394,7 @@ app.post('/get_codes', function (req, res) {
  */
 app.post('/get_all_trackid', function (req, res) {
     try {
-        // logger.log('get_all_trackid', 'level', level);
+        logger.log('get_all_trackid', 'level', level);
         res.send({'result': trackIdArray});
         logger.log('get_all_trackid', 'result length', trackIdArray.length);
     }
