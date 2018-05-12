@@ -2,11 +2,12 @@
   "name": "g3is",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "api.js",
   "dependencies": {
     "body-parser": "^1.18.2",
     "express": "^4.16.3",
     "lodash": "^4.17.10",
+    "log4js": "^2.6.0",
     "mongodb": "^3.0.7"
   },
   "devDependencies": {},
